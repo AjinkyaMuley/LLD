@@ -1,126 +1,185 @@
-### `Observable.h`
+# Observer Design Pattern
 
-- **`StocksObservable` Class:** An abstract class that defines the interface for adding, removing, and notifying observers. It also includes methods to set and get the stock count.
+## Introduction
+The **Observer Design Pattern** is a behavioral design pattern that establishes a **one-to-many dependency** between objects. When the **subject (observable)** changes state, all its **observers** are notified and updated automatically. This pattern promotes **loose coupling**, making the system more maintainable and scalable.
 
-  ```cpp
-  class StocksObservable {
-  public:
-      virtual void add(NotificationAlertObserver *observer) = 0;
-      virtual void remove(NotificationAlertObserver *observer) = 0;
-      virtual void notifySubscribers() = 0;
-      virtual void setStockCount(int newStockCount) = 0;
-      virtual int getStockCount() = 0;
-  };
-  ```
+## Use Case
+In this example, we are implementing a **Stock Notification System** where multiple users (observers) subscribe to stock availability updates. Whenever the stock becomes available, all subscribed users receive a notification via **email** or **mobile message**.
 
-- **`IPhoneObservableImpl` Class:** A concrete implementation of `StocksObservable`. It maintains a list of observers and the stock count. It notifies observers when the stock count changes from 0 to a positive number.
+## Components of Observer Pattern
+The Observer Pattern consists of the following components:
 
-  ```cpp
-  class IPhoneObservableImpl : public StocksObservable {
-  public:
-      list<NotificationAlertObserver *> observerList;
-      int stockCount = 0;
+1. **Subject (Observable)**
+   - Maintains a list of observers.
+   - Provides methods to **attach, detach**, and **notify** observers.
+   - When its state changes, it notifies all attached observers.
 
-      void add(NotificationAlertObserver *observer) override {
-          observerList.push_back(observer);
-      }
-      void remove(NotificationAlertObserver *observer) override {
-          observerList.remove(observer);
-      }
-      void notifySubscribers() override {
-          for (auto observer : observerList) {
-              observer->update();
-          }
-      }
-      void setStockCount(int newStockCount) override {
-          bool wasOutOfStock = (stockCount == 0);
-          stockCount += newStockCount;
+2. **Observer**
+   - Defines an interface with an `update()` method.
+   - Objects that subscribe to the subject must implement this interface.
 
-          if (wasOutOfStock && stockCount > 0) {
-              notifySubscribers();
-          }
-      }
-      int getStockCount() override {
-          return stockCount;
-      }
-  };
-  ```
+3. **Concrete Subject (StocksObservable)**
+   - Implements the `Observable` interface.
+   - Stores the list of observers and manages stock updates.
 
-### `Observer.h`
+4. **Concrete Observers (EmailAlertObserverImpl, MobileAlertObserverImpl)**
+   - Implements the `Observer` interface.
+   - Defines how each observer reacts when notified.
 
-- **`NotificationAlertObserver` Class:** An abstract class that defines the `update` method, which is called when the subject's state changes.
+---
 
-  ```cpp
-  class NotificationAlertObserver {
-  public:
-      virtual void update() = 0;
-  };
-  ```
+## Code Breakdown
 
-- **`EmailAlertObserverImpl` Class:** A concrete implementation of `NotificationAlertObserver`. It sends an email notification when the stock is available.
+### 1. Observer Interface (`NotificationAlertObserver`)
+```cpp
+class NotificationAlertObserver {
+public:
+    virtual void update() = 0; // Pure virtual function
+};
+```
+- This interface declares the `update()` method that every observer must implement.
 
-  ```cpp
-  class EmailAlertObserverImpl : public NotificationAlertObserver {
-      string emailId;
-      StocksObservable *observable;
+### 2. Concrete Observers (`EmailAlertObserverImpl` & `MobileAlertObserverImpl`)
+```cpp
+class EmailAlertObserverImpl : public NotificationAlertObserver {
+    string emailId;
+    StocksObservable *observable;
 
-      void sendMail(string emailId, string message) {
-          cout << "mail sent to :" << emailId << endl;
-      }
+    void sendMail(string emailId, string message) {
+        cout << "Mail sent to: " << emailId << endl;
+    }
 
-  public:
-      EmailAlertObserverImpl(string emailId, StocksObservable *observable) {
-          this->emailId = emailId;
-          this->observable = observable;
-      }
+public:
+    EmailAlertObserverImpl(string emailId, StocksObservable *observable) {
+        this->emailId = emailId;
+        this->observable = observable;
+    }
 
-      void update() override {
-          sendMail(emailId, "product is in stock hurry up!");
-      }
-  };
-  ```
+    void update() override {
+        sendMail(emailId, "Product is back in stock!");
+    }
+};
+```
+```cpp
+class MobileAlertObserverImpl : public NotificationAlertObserver {
+    string userName;
+    StocksObservable *observable;
 
-- **`MobileAlertObserverImpl` Class:** Another concrete implementation of `NotificationAlertObserver`. It sends a mobile message notification when the stock is available.
+    void sendMsg(string userName, string message) {
+        cout << "Message sent to: " << userName << endl;
+    }
 
-  ```cpp
-  class MobileAlertObserverImpl : public NotificationAlertObserver {
-      string userName;
-      StocksObservable *observable;
+public:
+    MobileAlertObserverImpl(string userName, StocksObservable *observable) {
+        this->userName = userName;
+        this->observable = observable;
+    }
 
-      void sendMsg(string userName, string message) {
-          cout << "msg sent to :" << userName << endl;
-      }
+    void update() override {
+        sendMsg(userName, "Product is back in stock!");
+    }
+};
+```
+- These classes implement the `update()` method, which defines how they receive notifications.
+- `sendMail()` and `sendMsg()` simulate sending notifications via email and mobile messages.
 
-  public:
-      MobileAlertObserverImpl(string userName, StocksObservable *observable) {
-          this->userName = userName;
-          this->observable = observable;
-      }
+### 3. Observable Interface (`StocksObservable`)
+```cpp
+class StocksObservable {
+public:
+    virtual void addObserver(NotificationAlertObserver *observer) = 0;
+    virtual void removeObserver(NotificationAlertObserver *observer) = 0;
+    virtual void notifyObservers() = 0;
+};
+```
+- Defines methods for adding, removing, and notifying observers.
 
-      void update() override {
-          sendMsg(userName, "product is in stock hurry up!");
-      }
-  };
-  ```
+### 4. Concrete Observable (`IPhoneObservableImpl`)
+```cpp
+class IPhoneObservableImpl : public StocksObservable {
+    vector<NotificationAlertObserver *> observers;
+    int stockCount = 0;
 
-### `store.cpp`
+public:
+    void addObserver(NotificationAlertObserver *observer) override {
+        observers.push_back(observer);
+    }
 
-- The `main` function demonstrates the creation of an `IPhoneObservableImpl` object and several observers (`EmailAlertObserverImpl` and `MobileAlertObserverImpl`). It adds these observers to the observable and changes the stock count to trigger notifications.
+    void removeObserver(NotificationAlertObserver *observer) override {
+        observers.erase(remove(observers.begin(), observers.end(), observer), observers.end());
+    }
 
-  ```cpp
-  int main() {
-      StocksObservable* iphoneStockObservable = new IPhoneObservableImpl();
+    void notifyObservers() override {
+        for (auto observer : observers) {
+            observer->update();
+        }
+    }
 
-      NotificationAlertObserver* observer1 = new EmailAlertObserverImpl("abc@gmail.com", iphoneStockObservable);
-      NotificationAlertObserver* observer2 = new EmailAlertObserverImpl("xyz@gmail.com", iphoneStockObservable);
-      NotificationAlertObserver* observer3 = new MobileAlertObserverImpl("xyz_username", iphoneStockObservable);
+    void setStockCount(int count) {
+        stockCount = count;
+        if (stockCount > 0) {
+            notifyObservers();
+        }
+    }
+};
+```
+- This class maintains a list of observers and manages stock availability.
+- When stock is available, it **notifies all observers**.
 
-      iphoneStockObservable->add(observer1);
-      iphoneStockObservable->add(observer2);
-      iphoneStockObservable->add(observer3);
+### 5. Main Function (`store.cpp`)
+```cpp
+int main() {
+    StocksObservable* iphoneStockObservable = new IPhoneObservableImpl();
 
-      iphoneStockObservable->setStockCount(10);
-      iphoneStockObservable->setStockCount(0);
-      iphoneStockObservable->setStockCount(100);
-  }
-  ```
+    NotificationAlertObserver* observer1 = new EmailAlertObserverImpl("abc@gmail.com", iphoneStockObservable);
+    NotificationAlertObserver* observer2 = new EmailAlertObserverImpl("xyz@gmail.com", iphoneStockObservable);
+    NotificationAlertObserver* observer3 = new MobileAlertObserverImpl("xyz_username", iphoneStockObservable);
+
+    iphoneStockObservable->addObserver(observer1);
+    iphoneStockObservable->addObserver(observer2);
+    iphoneStockObservable->addObserver(observer3);
+
+    // Simulating stock update
+    cout << "Stock added! Notifying observers..." << endl;
+    iphoneStockObservable->setStockCount(10);
+    
+    return 0;
+}
+```
+- We create an `IPhoneObservableImpl` object (`iphoneStockObservable`).
+- We create **observers** and attach them to the observable.
+- When `setStockCount(10)` is called, all observers are notified.
+
+---
+
+## Sequence Diagram
+```plaintext
++-------------+      addObserver()      +------------------+
+|  Observer1  | <-------------------- |  StocksObservable |
++-------------+                        +------------------+
++-------------+      addObserver()      +------------------+
+|  Observer2  | <-------------------- |  StocksObservable |
++-------------+                        +------------------+
+
+Stock updated -> notifyObservers() -> Observers get updated
+```
+
+## Advantages of Observer Pattern
+✅ **Decoupling:** Observers and subjects are loosely coupled, making the system more modular.  
+✅ **Scalability:** New observers can be added easily without modifying existing code.  
+✅ **Better Code Maintainability:** Follows **Open/Closed Principle** (OCP), making the code extensible.
+
+## Real-World Applications
+- **Event Listeners in UI frameworks (React, Angular, JavaFX).**
+- **Stock market monitoring systems.**
+- **Social media notifications (YouTube, Instagram, Twitter).**
+- **Messaging applications (WhatsApp, Slack, Discord).**
+
+## Summary
+The **Observer Pattern** allows an object (**subject**) to notify multiple dependent objects (**observers**) when its state changes. It is widely used in software engineering for implementing event-driven programming, notification systems, and real-time updates.
+
+---
+
+## References
+- [Design Patterns: Elements of Reusable Object-Oriented Software - Gamma et al.](https://en.wikipedia.org/wiki/Design_Patterns)
+- [Observer Pattern - Refactoring Guru](https://refactoring.guru/design-patterns/observer)
