@@ -1,143 +1,160 @@
-🐍🎲 Snake and Ladder Game – C++ Implementation
-📜 Overview
-This is an Object-Oriented Design of the classic Snake and Ladder game implemented in C++. The implementation is modular and follows key Low-Level Design (LLD) principles such as:
+# Snake and Ladder Game - OOP Design (C++) 🎲🐍🪜
 
-Single Responsibility Principle (SRP)
+This project implements the classic **Snake and Ladder** game using Object-Oriented Programming concepts in C++. The design ensures modularity, reusability, and scalability by properly modeling game components as classes.
 
-Modular Design
+## 🧠 Concepts Applied
+- **Object-Oriented Design (OOP)**
+- **Encapsulation and Modularity**
+- **Game Simulation with Players, Dice, Board, Snakes, and Ladders**
 
-Separation of Concerns
+---
 
-Design Patterns: Factory-like initialization, Strategy (Dice Roll), Queue-based Turn Management
+## 📌 Class Overview
 
-🧱 Class Responsibilities and Design Patterns
-✅ Player
-Responsibility: Holds player id and their currentPosition on the board.
+### `Player`
+- Represents a game player.
+- Holds `id` and `currentPosition`.
 
-Design Pattern: POJO (Plain Old Java Object) equivalent in C++.
+### `Dice`
+- Simulates dice rolls.
+- Can roll one or multiple dice.
 
-✅ Dice
-Responsibility: Represents a dice (or multiple dice) and can roll to return a total value.
+### `Jump`
+- Models a snake or ladder.
+- Has `start` and `end`.
 
-Design Pattern: Strategy Pattern – allows extension for different dice behaviors.
+### `Cell`
+- Represents each board cell.
+- Contains a `Jump` (snake or ladder), if present.
 
-✅ Jump (Snake or Ladder)
-Responsibility: Holds start and end positions of a snake or ladder.
+### `Board`
+- A 2D board of `Cell` objects.
+- Initializes cells and places snakes/ladders randomly.
 
-Design Pattern: Composition with Cell.
+### `Game`
+- Orchestrates the gameplay.
+- Manages player turns, applies jump logic, and determines the winner.
 
-✅ Cell
-Responsibility: Represents a board cell and optionally holds a Jump.
+---
 
-Design Pattern: Composite pattern for aggregating Jump into cells.
+## 🧮 Execution Flow
 
-✅ Board
-Responsibility: Manages all Cells and handles snake/ladder logic.
+1. **Initialize game** with a board of size 10x10, 5 snakes, and 4 ladders.
+2. **Players roll the dice** in turn and move forward.
+3. If a player lands on a **cell with a jump**, they jump to the end of it (snake or ladder).
+4. The game continues until one player reaches or crosses the final cell.
 
-Design Pattern: Factory-like pattern used to create and initialize the board.
+---
 
-✅ Game
-Responsibility: Controls game loop, player turns, and winner check.
+## 🔁 Class Interaction (UML Diagram)
 
-Design Pattern: Controller Pattern, Queue for Turn Management, Facade Pattern for hiding complexity.
+```plaintext
++----------------+
+|     Player     |
++----------------+
+| - id           |
+| - position     |
++----------------+
 
-🧩 UML Class Diagram
-plaintext
-Copy
-Edit
-               +------------+
-               |   Player   |
-               +------------+
-               | - id       |
-               | - position |
-               +------------+
-                      |
-                      |
-                      v
-               +------------+
-               |   Game     |<-------------------------------------+
-               +------------+                                      |
-               | - players  |                                      |
-               | - board    |                                      |
-               | - dice     |                                      |
-               | - winner   |                                      |
-               +------------+                                      |
-                      |                                            |
-        +-------------+-------------+                              |
-        |                           |                              |
-        v                           v                              |
-  +-----------+              +-----------+                         |
-  |   Dice    |              |  Board    |                         |
-  +-----------+              +-----------+                         |
-  | - diceCnt |              | - cells   |                         |
-  +-----------+              +-----------+                         |
-                              |                                    |
-                              v                                    |
-                        +-----------+                              |
-                        |   Cell    |<--------------------------+  |
-                        +-----------+                           |  |
-                        | - jump    |                           |  |
-                        +-----------+                           |  |
-                              |                                  |  |
-                              v                                  |  |
-                          +--------+                             |  |
-                          | Jump   |                             |  |
-                          +--------+                             |  |
-                          |start/end|                             |  |
-                          +--------+                             |  |
-                                                                 |  |
-                          (Board uses vector<vector<Cell*>>) ----+--+
-🔄 Workflow Diagram
-plaintext
-Copy
-Edit
-Start Game
-   |
-Initialize Game → Create Board (10x10) → Add Snakes and Ladders
-   |
-Create Players Queue
-   |
-While (no winner)
-   |
-Dequeue player turn
-   |
-Roll Dice
-   |
-Move Player Position
-   |
-Check Jump (Snake/Ladder)
-   |
-Update Position
-   |
-Check for Winner
-   |
-Re-enqueue Player
-   |
-End While
-   |
-Declare Winner 🎉
-🔗 Object Relationships
-Game owns Board, Dice, and a queue of Player objects.
++----------------+
+|     Dice       |
++----------------+
+| - diceCount    |
+| - rollDice()   |
++----------------+
 
-Board contains a 2D vector of Cell objects.
++----------------+
+|     Jump       |
++----------------+
+| - start        |
+| - end          |
++----------------+
 
-Each Cell optionally contains a Jump (Snake or Ladder).
++----------------+
+|     Cell       |
++----------------+
+| - Jump* jump   |
++----------------+
 
-Player interacts with Board and Dice through the Game controller.
++----------------+
+|     Board      |
++----------------+
+| - cells        |
+| - getCell()    |
++----------------+
 
-⚠️ Improvements & Extensions
-Add UI/CLI interaction
++----------------+
+|     Game       |
++----------------+
+| - Board* board |
+| - Dice* dice   |
+| - players      |
+| - winner       |
++----------------+
+```
 
-Add support for more players
+---
 
-Load board configuration from a file
+## 🔄 Flow Diagram
 
-Extend Dice using Strategy Pattern for weighted or custom dice
+```plaintext
++-----------+
+|  Game     |
++-----------+
+     |
+     v
+[Initialize Board, Dice, Players]
+     |
+     v
+[Roll Dice -> Move Player]
+     |
+     v
+[Check for Snake or Ladder]
+     |
+     v
+[Update Position]
+     |
+     v
+[Check Winner]
+     |
+     v
+  [Repeat]
+```
 
-🛠️ Build & Run
-bash
-Copy
-Edit
-g++ -o snake_ladder snake_ladder.cpp
-./snake_ladder
-Ensure you seed randomness using srand(time(0)) for fresh gameplay each run.
+---
+
+## 📦 How to Run
+```bash
+$ g++ SnakeNLadder.cpp -o SnakeNLadder
+$ ./SnakeNLadder
+```
+
+---
+
+## 📝 Example Output
+```bash
+player turn is: p1 current position is: 0
+jump done by: Ladder
+player turn is: p1 new position is: 36
+...
+Winner is : p1
+```
+
+---
+
+## 📚 Applications
+- **Digital Board Games**
+- **AI Game Simulation**
+- **Dice-based Educational Games**
+
+---
+
+## 🔧 Improvements
+- Allow user-defined players, snakes, ladders.
+- GUI interface for better visualization.
+- Add save/load game functionality.
+
+---
+
+Feel free to fork and modify this project to add new features or integrate AI bots. 🧠🎮
+
