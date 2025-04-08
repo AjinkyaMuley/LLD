@@ -228,6 +228,164 @@ flowchart TD
     K --> L[Booking confirmed]
 ```
 
+## Concurrency Control
+
+In a real-world booking system like BookMyShow, handling concurrent booking requests is critical. Multiple users might try to book the same seats simultaneously, leading to race conditions. The system needs concurrency control mechanisms to manage these situations. Two common approaches are optimistic and pessimistic locking.
+
+### Optimistic Locking
+
+Optimistic locking assumes conflicts are rare and allows transactions to proceed without locking resources. It verifies at commit time that no conflicts occurred.
+
+```mermaid
+sequenceDiagram
+    participant User1
+    participant User2
+    participant BookingSystem
+    
+    User1->>BookingSystem: Read Seat Info (Version 1)
+    User2->>BookingSystem: Read Seat Info (Version 1)
+    User1->>BookingSystem: Try to Book Seat
+    BookingSystem->>BookingSystem: Check Version (Still 1)
+    BookingSystem->>BookingSystem: Update Seat (Version 2)
+    BookingSystem->>User1: Booking Confirmed
+    
+    User2->>BookingSystem: Try to Book Same Seat
+    BookingSystem->>BookingSystem: Check Version (Now 2, Expected 1)
+    BookingSystem->>User2: Version Conflict, Retry
+```
+
+#### Implementation in BookMyShow
+
+To implement optimistic locking in the BookMyShow system, we could modify the `Show` class:
+
+```cpp
+class Show {
+public:
+    // Existing attributes
+    int version; // Version counter for optimistic locking
+    
+    bool tryBookSeat(int seatId, int expectedVersion) {
+        if (version != expectedVersion) {
+            return false; // Version conflict, booking failed
+        }
+        
+        // Check if seat is already booked
+        if (find(bookedSeatIds.begin(), bookedSeatIds.end(), seatId) != bookedSeatIds.end()) {
+            return false;
+        }
+        
+        // Book the seat and increment version
+        bookedSeatIds.push_back(seatId);
+        version++;
+        return true;
+    }
+};
+```
+
+### Pessimistic Locking
+
+Pessimistic locking assumes conflicts are likely and blocks access to resources by acquiring locks before performing operations.
+
+```mermaid
+sequenceDiagram
+    participant User1
+    participant User2
+    participant BookingSystem
+    
+    User1->>BookingSystem: Request Lock on Seat
+    BookingSystem->>User1: Lock Granted
+    User2->>BookingSystem: Request Lock on Same Seat
+    Note over User2,BookingSystem: User2 Waits...
+    
+    User1->>BookingSystem: Book Seat
+    User1->>BookingSystem: Release Lock
+    BookingSystem->>User2: Lock Granted
+    BookingSystem->>User2: Seat Already Booked
+    BookingSystem->>User2: Booking Failed
+```
+
+#### Implementation in BookMyShow
+
+For pessimistic locking, we could modify the system as follows:
+
+```cpp
+class ShowLockManager {
+private:
+    unordered_map<int, mutex> showLocks; // Show ID to mutex mapping
+    
+public:
+    void lockShow(int showId) {
+        showLocks[showId].lock();
+    }
+    
+    void unlockShow(int showId) {
+        showLocks[showId].unlock();
+    }
+};
+
+// In BookMyShow class
+void BookMyShow::createBooking(City userCity, string movieName) {
+    // Find show as before
+    
+    // Lock the show before checking seat availability
+    showLockManager.lockShow(interestedShow->getShowId());
+    
+    try {
+        list<int> bookedSeats = interestedShow->getBookedSeatIds();
+        if (find(bookedSeats.begin(), bookedSeats.end(), seatNumber) == bookedSeats.end()) {
+            // Book the seat as before
+        } else {
+            // Seat already booked
+        }
+    } finally {
+        // Always release the lock
+        showLockManager.unlockShow(interestedShow->getShowId());
+    }
+}
+```
+
+### Comparison: Optimistic vs Pessimistic Locking
+
+```mermaid
+graph TD
+    subgraph Optimistic Locking
+        A1[Assumes conflicts are rare] --> B1[No locks during operation]
+        B1 --> C1[Version check at commit time]
+        C1 --> D1[If conflict, retry or fail]
+        D1 --> E1[High throughput when conflicts rare]
+    end
+    
+    subgraph Pessimistic Locking
+        A2[Assumes conflicts are common] --> B2[Acquires locks before operation]
+        B2 --> C2[Blocks other transactions]
+        C2 --> D2[Releases locks after completion]
+        D2 --> E2[Ensures consistency but may reduce throughput]
+    end
+```
+
+### When to Use Each Approach
+
+1. **Optimistic Locking**:
+   - Best for read-heavy systems
+   - Good when conflicts are rare
+   - Works well when transactions are short
+   - Better throughput in low-contention scenarios
+
+2. **Pessimistic Locking**:
+   - Best for write-heavy systems
+   - Good when conflicts are frequent
+   - Better when transactions are long-running
+   - Prevents wasted work from retries
+
+### Recommendation for BookMyShow
+
+For a ticket booking system like BookMyShow, a hybrid approach might be ideal:
+
+1. Use **optimistic locking** for browsing movies and shows (read-heavy operations)
+2. Use **pessimistic locking** for seat selection and booking (critical write operations)
+
+In high-demand scenarios (like opening day of a popular movie), pessimistic locking at the seat level would help prevent overbooking, while optimistic locking could be used for other parts of the system to maintain high throughput.
+
 ## Code Explanation
 
 ### 1. Model Classes
@@ -401,10 +559,10 @@ public:
 
 3. **Seat Selection**: Seat selection is hardcoded instead of allowing user choice.
 
-4. **Concurrency Control**: The system lacks mechanisms to handle concurrent bookings.
+4. **Concurrency Control**: The current implementation lacks mechanisms to handle concurrent bookings, which could be addressed by adding optimistic or pessimistic locking as described in the concurrency section.
 
 5. **Error Handling**: Error handling is minimal, with simple console messages.
 
 ## Conclusion
 
-The provided BookMyShow design demonstrates a classic object-oriented approach to building a ticket booking system. It separates concerns between different components, uses controllers to manage data, and implements a clean flow for the booking process. The design could be enhanced by addressing the limitations mentioned above, but it provides a solid foundation for a movie ticket booking system.
+The provided BookMyShow design demonstrates a classic object-oriented approach to building a ticket booking system. It separates concerns between different components, uses controllers to manage data, and implements a clean flow for the booking process. The design could be enhanced by addressing the limitations mentioned above, particularly by implementing a robust concurrency control mechanism, but it provides a solid foundation for a movie ticket booking system.
