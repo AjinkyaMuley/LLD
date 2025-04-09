@@ -102,14 +102,14 @@ classDiagram
 
 ```mermaid
 flowchart TD
-    A[Client] -->|Requests vehicle| B[VehicleFactory]
-    B -->|vehicleType == "CAR"| C[Create Car]
-    B -->|vehicleType != "CAR"| D[Create NullVehicle]
-    C -->|Return| E[Vehicle Object]
-    D -->|Return| E
-    E -->|Use| F[printVehicleDetails]
-    F -->|Call methods| G[getTankCapacity/getSeatingCapacity]
-    G -->|Print results| H[Output]
+    A[Client] --> B[VehicleFactory]
+    B -- "vehicleType == CAR" --> C[Create Car]
+    B -- "vehicleType != CAR" --> D[Create NullVehicle]
+    C --> E[Vehicle Object]
+    D --> E
+    E --> F[printVehicleDetails]
+    F --> G[getTankCapacity/getSeatingCapacity]
+    G --> H[Output]
 ```
 
 ## Sequence Diagram
@@ -132,10 +132,10 @@ sequenceDiagram
     end
     VehicleFactory-->>Client: vehicle object
     Client->>printVehicleDetails: printVehicleDetails(vehicle)
-    printVehicleDetails->>+Vehicle: getSeatingCapacity()
-    Vehicle-->>-printVehicleDetails: capacity
-    printVehicleDetails->>+Vehicle: getTankCapacity()
-    Vehicle-->>-printVehicleDetails: capacity
+    printVehicleDetails->>Vehicle: getSeatingCapacity()
+    Vehicle-->>printVehicleDetails: capacity
+    printVehicleDetails->>Vehicle: getTankCapacity()
+    Vehicle-->>printVehicleDetails: capacity
 ```
 
 ## Benefits of the Null Object Pattern
@@ -179,6 +179,84 @@ When requesting an unsupported vehicle type (e.g., "BIKE"):
 ```
 Seating Capacity: 0
 Fuel Tank Capacity: 0
+```
+
+## Implementation in the Sample Code
+
+Let's walk through the actual implementation in the provided code:
+
+1. The abstract `Vehicle` class defines the interface with two pure virtual methods:
+```cpp
+class Vehicle{
+    public:
+    virtual int getTankCapacity() = 0;
+    virtual int getSeatingCapacity() = 0;
+};
+```
+
+2. The `Car` class is a concrete implementation with meaningful values:
+```cpp
+class Car : public Vehicle{
+    public:
+        int getTankCapacity() override
+        {
+            return 40;
+        }
+
+        int getSeatingCapacity() override
+        {
+            return 5;
+        }
+};
+```
+
+3. The `NullVehicle` class is our null object implementation:
+```cpp
+class NullVehicle : public Vehicle{
+    public:
+        int getTankCapacity() override
+        {
+            return 0;
+        }
+
+        int getSeatingCapacity() override
+        {
+            return 0;
+        }
+};
+```
+
+4. The `VehicleFactory` determines which object to create:
+```cpp
+class VehicleFactory{
+    public:
+        static Vehicle* getVehicleObject(string vehicleType)
+        {
+            if(vehicleType == "CAR")
+            {
+                return new Car();
+            }
+
+            return new NullVehicle();
+        }
+};
+```
+
+5. The client code can use any vehicle without null checks:
+```cpp
+void printVehicleDetails(Vehicle* vehicle)
+{
+    cout << "Seating Capacity: " << vehicle->getSeatingCapacity() << endl << "Fuel Tank Capacity: " << vehicle->getTankCapacity() << endl;
+}
+
+int main()
+{
+    // Vehicle* vehicle = VehicleFactory :: getVehicleObject("BIKE");
+    Vehicle* vehicle = VehicleFactory :: getVehicleObject("CAR");
+
+    printVehicleDetails(vehicle);    
+    return 0;
+}
 ```
 
 ## Conclusion
