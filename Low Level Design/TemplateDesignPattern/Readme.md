@@ -95,18 +95,18 @@ sequenceDiagram
 The following activity diagram illustrates the payment processing workflow:
 
 ```mermaid
-graph TD
+flowchart TD
     A[Start Payment] --> B{Select Payment Type}
     B -->|PayToFriend| C[PayToFriend Instance]
     B -->|PayToMerchant| D[PayToMerchant Instance]
     
-    C --> E[sendMoney()]
-    D --> E[sendMoney()]
+    C --> E[Call sendMoney]
+    D --> E
     
-    E --> F[validateRequest()]
-    F --> G[calculateFees()]
-    G --> H[debitAmount()]
-    H --> I[creditAmount()]
+    E --> F[validateRequest]
+    F --> G[calculateFees]
+    G --> H[debitAmount]
+    H --> I[creditAmount]
     I --> J[Payment Complete]
 ```
 
@@ -156,7 +156,7 @@ classDiagram
 ## Data Flow Diagram
 
 ```mermaid
-graph TD
+flowchart TD
     A[Payment Request] --> B{Payment Type}
     B -->|Friend Payment| C[PayToFriend Object]
     B -->|Merchant Payment| D[PayToMerchant Object]
