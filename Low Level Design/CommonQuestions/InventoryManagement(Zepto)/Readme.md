@@ -94,20 +94,20 @@ classDiagram
         +int pinCode
         +string city
         +string state
-        +Address(int, string, string)
+        +Address(int pinCode, string city, string state)
         +int getPinCode()
-        +void setPinCode(int)
+        +void setPinCode(int pinCode)
         +string getCity()
-        +void setCity(string)
+        +void setCity(string city)
         +string getState()
-        +void setState(string)
+        +void setState(string state)
     }
     
     class Cart {
         +unordered_map~int,int~ productCategoryIdVsCountMap
         +Cart()
-        +void addItemInCart(int, int)
-        +void removeItemFromCart(int, int)
+        +void addItemInCart(int productId, int count)
+        +void removeItemFromCart(int productId, int count)
         +void emptyCart()
         +unordered_map~int,int~ getCartItems()
     }
@@ -115,17 +115,17 @@ classDiagram
     class Warehouse {
         +Inventory* inventory
         +Address* address
-        +void removeItemFromInventory(unordered_map~int,int~)
-        +void addItemToInventory(unordered_map~int,int~)
+        +void removeItemFromInventory(unordered_map~int,int~ items)
+        +void addItemToInventory(unordered_map~int,int~ items)
     }
     
     class Inventory {
         +vector~ProductCategory*~ productCategoryList
         +Inventory()
-        +void addCategory(int, string, int)
-        +void addProduct(Product*, int)
-        +void removeItems(unordered_map~int,int~)
-        -ProductCategory* getProductCategoryFromID(int)
+        +void addCategory(int categoryId, string categoryName, int price)
+        +void addProduct(Product* product, int categoryId)
+        +void removeItems(unordered_map~int,int~ items)
+        -ProductCategory* getProductCategoryFromID(int categoryId)
     }
     
     class ProductCategory {
@@ -133,21 +133,22 @@ classDiagram
         +string categoryName
         +vector~Product*~ products
         +double price
-        +void addProduct(Product*)
-        +void removeProduct(int)
+        +void addProduct(Product* product)
+        +void removeProduct(int productId)
     }
     
     class Product {
         +int productId
         +string productName
+        +Product(int productId, string productName)
     }
     
-    User ||--|| Address
-    User ||--|| Cart
-    Warehouse ||--|| Inventory
-    Warehouse ||--|| Address
-    Inventory ||--o{ ProductCategory
-    ProductCategory ||--o{ Product
+    User "1" -- "1" Address : has
+    User "1" -- "1" Cart : has
+    Warehouse "1" -- "1" Inventory : contains
+    Warehouse "1" -- "1" Address : located at
+    Inventory "1" -- "*" ProductCategory : manages
+    ProductCategory "1" -- "*" Product : contains
 ```
 
 ### Order Processing Classes
@@ -161,10 +162,10 @@ classDiagram
         +Warehouse* warehouse
         +Invoice* invoice
         +Payment* payment
-        +OrderStatus* orderStatus
-        +Order(User*, Warehouse*)
+        +OrderStatus orderStatus
+        +Order(User* user, Warehouse* warehouse)
         +void checkout()
-        +bool makePayment(PaymentMode*)
+        +bool makePayment(PaymentMode* paymentMode)
         +void generateOrderInvoice()
     }
     
@@ -172,26 +173,26 @@ classDiagram
         +int totalItemPrice
         +int totalTax
         +int totalFinalPrice
-        +void generateInvoice(Order*)
+        +void generateInvoice(Order* order)
     }
     
     class Payment {
         +PaymentMode* paymentMode
-        +Payment(PaymentMode*)
+        +Payment(PaymentMode* paymentMode)
         +bool makePayment()
     }
     
     class PaymentMode {
         <<abstract>>
-        +virtual bool makePayment() = 0
+        +makePayment() bool*
     }
     
     class UPIPaymentMode {
-        +bool makePayment() override
+        +makePayment() bool
     }
     
     class CardPaymentMode {
-        +bool makePayment() override
+        +makePayment() bool
     }
     
     class OrderStatus {
@@ -202,12 +203,12 @@ classDiagram
         UNDELIVERED
     }
     
-    Order ||--|| Invoice
-    Order ||--|| Payment
-    Order ||--|| OrderStatus
-    Payment ||--|| PaymentMode
-    PaymentMode <|-- UPIPaymentMode
-    PaymentMode <|-- CardPaymentMode
+    Order "1" -- "1" Invoice : has
+    Order "1" -- "1" Payment : processes
+    Order "1" -- "1" OrderStatus : has status
+    Payment "1" -- "1" PaymentMode : uses
+    PaymentMode <|-- UPIPaymentMode : implements
+    PaymentMode <|-- CardPaymentMode : implements
 ```
 
 ### Controller Classes
@@ -218,45 +219,45 @@ classDiagram
         +UserController* userController
         +WarehouseController* warehouseController
         +OrderController* orderController
-        +ProductDeliverySystem(vector~User*~, vector~Warehouse*~)
-        +User* getUser(int)
-        +Warehouse* getWarehouse(WarehouseSelectionStrategy*)
-        +Inventory* getInventory(Warehouse*)
-        +void addProductToCart(User*, ProductCategory*, int)
-        +Order* placeOrder(User*, Warehouse*)
-        +void checkout(Order*)
+        +ProductDeliverySystem(vector~User*~ users, vector~Warehouse*~ warehouses)
+        +User* getUser(int userId)
+        +Warehouse* getWarehouse(WarehouseSelectionStrategy* strategy)
+        +Inventory* getInventory(Warehouse* warehouse)
+        +void addProductToCart(User* user, ProductCategory* product, int count)
+        +Order* placeOrder(User* user, Warehouse* warehouse)
+        +void checkout(Order* order)
     }
     
     class UserController {
         +vector~User*~ userList
-        +UserController(vector~User*~)
-        +void addUser(User*)
-        +void removeUser(User*)
-        +User* getUser(int)
+        +UserController(vector~User*~ users)
+        +void addUser(User* user)
+        +void removeUser(User* user)
+        +User* getUser(int userId)
     }
     
     class WarehouseController {
         +vector~Warehouse*~ warehouseList
         +WarehouseSelectionStrategy* warehouseSelectionStrategy
-        +WarehouseController(vector~Warehouse*~, WarehouseSelectionStrategy*)
-        +void addNewWarehouse(Warehouse*)
-        +void removeWarehouse(Warehouse*)
-        +Warehouse* selectWarehouse(WarehouseSelectionStrategy*)
+        +WarehouseController(vector~Warehouse*~ warehouses, WarehouseSelectionStrategy* strategy)
+        +void addNewWarehouse(Warehouse* warehouse)
+        +void removeWarehouse(Warehouse* warehouse)
+        +Warehouse* selectWarehouse(WarehouseSelectionStrategy* strategy)
     }
     
     class OrderController {
         +vector~Order*~ orderList
         +unordered_map~int,vector~Order*~~ userIDVsOrders
         +OrderController()
-        +Order* createNewOrder(User*, Warehouse*)
-        +void removeOrder(Order*)
-        +vector~Order*~ getOrderByCustomerId(int)
-        +Order* getOrderByOrderId(int)
+        +Order* createNewOrder(User* user, Warehouse* warehouse)
+        +void removeOrder(Order* order)
+        +vector~Order*~ getOrderByCustomerId(int userId)
+        +Order* getOrderByOrderId(int orderId)
     }
     
-    ProductDeliverySystem ||--|| UserController
-    ProductDeliverySystem ||--|| WarehouseController
-    ProductDeliverySystem ||--|| OrderController
+    ProductDeliverySystem "1" -- "1" UserController : manages
+    ProductDeliverySystem "1" -- "1" WarehouseController : manages
+    ProductDeliverySystem "1" -- "1" OrderController : manages
 ```
 
 ### Strategy Pattern Implementation
@@ -265,14 +266,14 @@ classDiagram
 classDiagram
     class WarehouseSelectionStrategy {
         <<abstract>>
-        +virtual Warehouse* selectWarehouse(vector~Warehouse*~) = 0
+        +selectWarehouse(vector~Warehouse*~ warehouses) Warehouse*
     }
     
     class NearestWarehouseSelectionStrategy {
-        +Warehouse* selectWarehouse(vector~Warehouse*~) override
+        +selectWarehouse(vector~Warehouse*~ warehouses) Warehouse*
     }
     
-    WarehouseSelectionStrategy <|-- NearestWarehouseSelectionStrategy
+    WarehouseSelectionStrategy <|-- NearestWarehouseSelectionStrategy : implements
     WarehouseController ..> WarehouseSelectionStrategy : uses
 ```
 
