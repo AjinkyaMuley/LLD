@@ -142,12 +142,12 @@ classDiagram
         +string productName
     }
     
-    User ||--|| Address : has
-    User ||--|| Cart : owns
-    Warehouse ||--|| Inventory : contains
-    Warehouse ||--|| Address : located_at
-    Inventory ||--o{ ProductCategory : manages
-    ProductCategory ||--o{ Product : contains
+    User ||--|| Address
+    User ||--|| Cart
+    Warehouse ||--|| Inventory
+    Warehouse ||--|| Address
+    Inventory ||--o{ ProductCategory
+    ProductCategory ||--o{ Product
 ```
 
 ### Order Processing Classes
@@ -202,10 +202,10 @@ classDiagram
         UNDELIVERED
     }
     
-    Order ||--|| Invoice : generates
-    Order ||--|| Payment : processes
-    Order ||--|| OrderStatus : has
-    Payment ||--|| PaymentMode : uses
+    Order ||--|| Invoice
+    Order ||--|| Payment
+    Order ||--|| OrderStatus
+    Payment ||--|| PaymentMode
     PaymentMode <|-- UPIPaymentMode
     PaymentMode <|-- CardPaymentMode
 ```
@@ -254,9 +254,9 @@ classDiagram
         +Order* getOrderByOrderId(int)
     }
     
-    ProductDeliverySystem ||--|| UserController : manages
-    ProductDeliverySystem ||--|| WarehouseController : manages  
-    ProductDeliverySystem ||--|| OrderController : manages
+    ProductDeliverySystem ||--|| UserController
+    ProductDeliverySystem ||--|| WarehouseController
+    ProductDeliverySystem ||--|| OrderController
 ```
 
 ### Strategy Pattern Implementation
