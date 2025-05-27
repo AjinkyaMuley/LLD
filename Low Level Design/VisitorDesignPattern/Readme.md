@@ -44,50 +44,59 @@ VisitorDesignPattern/
 ## Class Diagram
 
 ```
-┌─────────────────────────────┐
-│       RoomElement           │
-│       <<abstract>>          │
-├─────────────────────────────┤
-│ + accept(RoomVisitor*) = 0  │
-│ + ~RoomElement()            │
-└─────────────┬───────────────┘
-              │
-              │ inherits
-    ┌─────────┼─────────┐
-    │         │         │
-    ▼         ▼         ▼
-┌─────────┐ ┌─────────┐ ┌─────────┐
-│SingleRoom│ │DoubleRoom│ │DeluxeRoom│
-├─────────┤ ├─────────┤ ├─────────┤
-│+roomPrice│ │+roomPrice│ │+roomPrice│
-│+accept() │ │+accept() │ │+accept() │
-└─────────┘ └─────────┘ └─────────┘
-     │           │           │
-     │           │           │
-     └───────────┼───────────┘
-                 │ uses
-                 ▼
-    ┌─────────────────────────────┐
-    │       RoomVisitor           │
-    │       <<abstract>>          │
-    ├─────────────────────────────┤
-    │ + visit(SingleRoom*) = 0    │
-    │ + visit(DoubleRoom*) = 0    │
-    │ + visit(DeluxeRoom*) = 0    │
-    │ + ~RoomVisitor()            │
-    └─────────────┬───────────────┘
-                  │
-                  │ inherits
-        ┌─────────┴─────────┐
-        │                   │
-        ▼                   ▼
-┌─────────────────┐ ┌─────────────────────┐
-│RoomPricingVisitor│ │RoomMaintenanceVisitor│
-├─────────────────┤ ├─────────────────────┤
-│+visit(SingleRoom)│ │+visit(SingleRoom)   │
-│+visit(DoubleRoom)│ │+visit(DoubleRoom)   │
-│+visit(DeluxeRoom)│ │+visit(DeluxeRoom)   │
-└─────────────────┘ └─────────────────────┘
+classDiagram
+    class RoomElement {
+        <<abstract>>
+        +accept(RoomVisitor* visitor)*
+        +~RoomElement()
+    }
+    
+    class SingleRoom {
+        +int roomPrice
+        +accept(RoomVisitor* visitor)
+    }
+    
+    class DoubleRoom {
+        +int roomPrice
+        +accept(RoomVisitor* visitor)
+    }
+    
+    class DeluxeRoom {
+        +int roomPrice
+        +accept(RoomVisitor* visitor)
+    }
+    
+    class RoomVisitor {
+        <<abstract>>
+        +visit(SingleRoom* room)*
+        +visit(DoubleRoom* room)*
+        +visit(DeluxeRoom* room)*
+        +~RoomVisitor()
+    }
+    
+    class RoomPricingVisitor {
+        +visit(SingleRoom* room)
+        +visit(DoubleRoom* room)
+        +visit(DeluxeRoom* room)
+    }
+    
+    class RoomMaintenanceVisitor {
+        +visit(SingleRoom* room)
+        +visit(DoubleRoom* room)
+        +visit(DeluxeRoom* room)
+    }
+    
+    RoomElement <|-- SingleRoom
+    RoomElement <|-- DoubleRoom
+    RoomElement <|-- DeluxeRoom
+    
+    RoomVisitor <|-- RoomPricingVisitor
+    RoomVisitor <|-- RoomMaintenanceVisitor
+    
+    RoomElement ..> RoomVisitor : uses
+    RoomVisitor ..> SingleRoom : visits
+    RoomVisitor ..> DoubleRoom : visits
+    RoomVisitor ..> DeluxeRoom : visits
 ```
 
 ## Sequence Diagram
