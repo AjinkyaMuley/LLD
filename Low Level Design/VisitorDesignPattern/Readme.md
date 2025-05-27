@@ -43,302 +43,86 @@ VisitorDesignPattern/
 
 ## Class Diagram
 
-```
-classDiagram
-    class RoomElement {
-        <<abstract>>
-        +accept(RoomVisitor* visitor)*
-        +~RoomElement()
-    }
-    
-    class SingleRoom {
-        +int roomPrice
-        +accept(RoomVisitor* visitor)
-    }
-    
-    class DoubleRoom {
-        +int roomPrice
-        +accept(RoomVisitor* visitor)
-    }
-    
-    class DeluxeRoom {
-        +int roomPrice
-        +accept(RoomVisitor* visitor)
-    }
-    
-    class RoomVisitor {
-        <<abstract>>
-        +visit(SingleRoom* room)*
-        +visit(DoubleRoom* room)*
-        +visit(DeluxeRoom* room)*
-        +~RoomVisitor()
-    }
-    
-    class RoomPricingVisitor {
-        +visit(SingleRoom* room)
-        +visit(DoubleRoom* room)
-        +visit(DeluxeRoom* room)
-    }
-    
-    class RoomMaintenanceVisitor {
-        +visit(SingleRoom* room)
-        +visit(DoubleRoom* room)
-        +visit(DeluxeRoom* room)
-    }
-    
-    RoomElement <|-- SingleRoom
-    RoomElement <|-- DoubleRoom
-    RoomElement <|-- DeluxeRoom
-    
-    RoomVisitor <|-- RoomPricingVisitor
-    RoomVisitor <|-- RoomMaintenanceVisitor
-    
-    RoomElement ..> RoomVisitor : uses
-    RoomVisitor ..> SingleRoom : visits
-    RoomVisitor ..> DoubleRoom : visits
-    RoomVisitor ..> DeluxeRoom : visits
-```
+The class diagram shows the structure of the Visitor Design Pattern implementation. It illustrates the relationship between the abstract `RoomElement` and `RoomVisitor` classes, their concrete implementations, and how they interact with each other.
+
+**Key relationships:**
+- **Inheritance**: Concrete rooms inherit from `RoomElement`
+- **Inheritance**: Concrete visitors inherit from `RoomVisitor` 
+- **Dependency**: `RoomElement` uses `RoomVisitor` through the accept() method
+- **Visits**: Each visitor can visit all room types
+
+*Refer to the Class Diagram artifact above for the visual representation.*
 
 ## Sequence Diagram
 
-```
-Client    SingleRoom   DoubleRoom   DeluxeRoom   PricingVisitor   MaintenanceVisitor
-  |           |            |            |              |                |
-  |--create-->|            |            |              |                |
-  |--create------------->|            |              |                |
-  |--create------------------------->|              |                |
-  |--create---------------------------------------------->|                |
-  |           |            |            |              |                |
-  |           |            |            |              |                |
-  |-- PRICING PHASE ---------------------------------->|                |
-  |           |            |            |              |                |
-  |--accept-->|            |            |              |                |
-  |           |--visit(this)--------------------------->|                |
-  |           |            |            |      set roomPrice=1000       |
-  |           |<-return---------------------------------|                |
-  |<-return---|            |            |              |                |
-  |           |            |            |              |                |
-  |--accept-------------->|            |              |                |
-  |           |            |--visit(this)------------->|                |
-  |           |            |            |      set roomPrice=2000       |
-  |           |            |<-return----|              |                |
-  |<-return----------------|            |              |                |
-  |           |            |            |              |                |
-  |--accept--------------------------->|              |                |
-  |           |            |            |--visit(this)->|                |
-  |           |            |            |      set roomPrice=5000       |
-  |           |            |            |<-return------|                |
-  |<-return-----------------------------|              |                |
-  |           |            |            |              |                |
-  |--create----------------------------------------------------------->|
-  |           |            |            |              |                |
-  |-- MAINTENANCE PHASE --------------------------------|--------------->|
-  |           |            |            |              |                |
-  |--accept-->|            |            |              |                |
-  |           |--visit(this)---------------------------------------------->|
-  |           |            |            |              |    perform maintenance
-  |           |<-return----------------------------------------------|
-  |<-return---|            |            |              |                |
-  |           |            |            |              |                |
-  |--accept-------------->|            |              |                |
-  |           |            |--visit(this)------------------------------>|
-  |           |            |            |              |    perform maintenance
-  |           |            |<-return------------------------------------|
-  |<-return----------------|            |              |                |
-  |           |            |            |              |                |
-  |--accept--------------------------->|              |                |
-  |           |            |            |--visit(this)----------------->|
-  |           |            |            |              |    perform maintenance
-  |           |            |            |<-return-----------------------|
-  |<-return-----------------------------|              |                |
-```
+The sequence diagram demonstrates the complete interaction flow between objects during the execution of the Visitor pattern. It shows how the double dispatch mechanism works through the combination of `accept()` and `visit()` methods.
+
+**Key interactions:**
+1. **Object Creation**: Client creates room and visitor objects
+2. **Pricing Phase**: Each room accepts the pricing visitor, which sets appropriate prices
+3. **Maintenance Phase**: Each room accepts the maintenance visitor for operations
+
+**Double Dispatch Flow:**
+- Client calls `room.accept(visitor)`
+- Room calls `visitor.visit(this)` 
+- Visitor executes the appropriate operation based on room type
+
+*Refer to the Sequence Diagram artifact above for the detailed interaction flow.*
 
 ## Activity Diagram
 
-```
-                           [Start]
-                              |
-                              ▼
-                    ┌─────────────────────┐
-                    │   Create Room       │
-                    │   Objects           │
-                    │ (Single, Double,    │
-                    │  Deluxe)            │
-                    └──────────┬──────────┘
-                              |
-                              ▼
-                    ┌─────────────────────┐
-                    │  Create Pricing     │
-                    │  Visitor Object     │
-                    └──────────┬──────────┘
-                              |
-                              ▼
-        ┌─────────────────────────────────────────────────┐
-        │         PRICING OPERATIONS                      │
-        │                                                 │
-        │  ┌─────────────────────┐                       │
-        │  │ Apply Pricing to    │                       │
-        │  │ Single Room         │                       │
-        │  │ (set price = 1000)  │                       │
-        │  └─────────┬───────────┘                       │
-        │            │                                   │
-        │            ▼                                   │
-        │  ┌─────────────────────┐                       │
-        │  │ Apply Pricing to    │                       │
-        │  │ Double Room         │                       │
-        │  │ (set price = 2000)  │                       │
-        │  └─────────┬───────────┘                       │
-        │            │                                   │
-        │            ▼                                   │
-        │  ┌─────────────────────┐                       │
-        │  │ Apply Pricing to    │                       │
-        │  │ Deluxe Room         │                       │
-        │  │ (set price = 5000)  │                       │
-        │  └─────────┬───────────┘                       │
-        └────────────┼───────────────────────────────────┘
-                     │
-                     ▼
-                    ┌─────────────────────┐
-                    │  Display Room       │
-                    │  Prices             │
-                    └──────────┬──────────┘
-                              |
-                              ▼
-                    ┌─────────────────────┐
-                    │  Create Maintenance │
-                    │  Visitor Object     │
-                    └──────────┬──────────┘
-                              |
-                              ▼
-        ┌─────────────────────────────────────────────────┐
-        │       MAINTENANCE OPERATIONS                    │
-        │                                                 │
-        │  ┌─────────────────────┐                       │
-        │  │ Perform Maintenance │                       │
-        │  │ on Single Room      │                       │
-        │  └─────────┬───────────┘                       │
-        │            │                                   │
-        │            ▼                                   │
-        │  ┌─────────────────────┐                       │
-        │  │ Perform Maintenance │                       │
-        │  │ on Double Room      │                       │
-        │  └─────────┬───────────┘                       │
-        │            │                                   │
-        │            ▼                                   │
-        │  ┌─────────────────────┐                       │
-        │  │ Perform Maintenance │                       │
-        │  │ on Deluxe Room      │                       │
-        │  └─────────┬───────────┘                       │
-        └────────────┼───────────────────────────────────┘
-                     │
-                     ▼
-                   [End]
+The activity diagram shows the step-by-step process flow of the hotel management system using the Visitor pattern. It illustrates both the main execution flow and the internal visitor pattern mechanism.
 
-              Visitor Pattern Flow:
-        ┌─────────────────────────────────┐
-        │     room.accept(visitor)        │
-        └──────────────┬──────────────────┘
-                       │
-                       ▼
-        ┌─────────────────────────────────┐
-        │     visitor.visit(room)         │
-        └──────────────┬──────────────────┘
-                       │
-                       ▼
-        ┌─────────────────────────────────┐
-        │    Execute Operation            │
-        │   (pricing/maintenance)         │
-        └──────────────┬──────────────────┘
-                       │
-                       ▼
-        ┌─────────────────────────────────┐
-        │     Return to Client            │
-        └─────────────────────────────────┘
-```
+**Main Flow:**
+1. **Initialization**: Create room objects and visitors
+2. **Pricing Phase**: Apply pricing logic to all rooms
+3. **Maintenance Phase**: Perform maintenance on all rooms
+
+**Visitor Pattern Flow:**
+- `room.accept(visitor)` → `visitor.visit(room)` → Execute Operation → Return
+
+*Refer to the Activity Diagram artifact above for the complete process flow visualization.*
 
 ## Use Case Diagram
 
-```
-                    Hotel Management System
-    ┌─────────────────────────────────────────────────────────┐
-    │                                                         │
-    │         ┌─────────────────────────┐                     │
-    │         │   Calculate Room        │                     │
-    │         │   Pricing               │                     │
-    │         └───────────┬─────────────┘                     │
-    │                     │                                   │
-    │         ┌─────────────────────────┐                     │
-    │         │   Perform Room          │                     │
-    │         │   Maintenance           │                     │
-    │         └───────────┬─────────────┘                     │
-    │                     │                                   │
-    │         ┌─────────────────────────┐                     │
-    │         │   Add New Operations    │                     │
-    │         │   (Future Extension)    │                     │
-    │         └───────────┬─────────────┘                     │
-    │                     │                                   │
-    └─────────────────────┼───────────────────────────────────┘
-                          │
-         ┌────────────────┼────────────────┐
-         │                │                │
-         ▼                ▼                ▼
-    ┌─────────┐    ┌─────────────┐    ┌──────────┐
-    │ Hotel   │    │Maintenance  │    │Developer │
-    │ Manager │    │   Staff     │    │          │
-    └─────────┘    └─────────────┘    └──────────┘
-         │                │                │
-         │                │                │
-         └────────────────┼────────────────┘
-                          │
-                          ▼
-              ┌───────────────────────┐
-              │     Room Types        │
-              │                       │
-              │  ┌─────────────────┐  │
-              │  │  Single Room    │  │
-              │  │  - roomPrice    │  │
-              │  │  - accept()     │  │
-              │  └─────────────────┘  │
-              │                       │
-              │  ┌─────────────────┐  │
-              │  │  Double Room    │  │
-              │  │  - roomPrice    │  │
-              │  │  - accept()     │  │
-              │  └─────────────────┘  │
-              │                       │
-              │  ┌─────────────────┐  │
-              │  │  Deluxe Room    │  │
-              │  │  - roomPrice    │  │
-              │  │  - accept()     │  │
-              │  └─────────────────┘  │
-              └───────────────────────┘
+The use case diagram illustrates the real-world usage scenarios of the hotel management system and shows how different actors interact with the system operations.
 
-    Relationships:
-    ┌─────────────────────────────────────────────────────┐
-    │ Hotel Manager    → Calculate Room Pricing           │
-    │ Maintenance Staff → Perform Room Maintenance       │
-    │ Developer        → Add New Operations               │
-    │                                                     │
-    │ All Use Cases   → Apply to All Room Types          │
-    └─────────────────────────────────────────────────────┘
-```
+**Actors:**
+- **Hotel Manager**: Responsible for calculating room pricing
+- **Maintenance Staff**: Performs room maintenance operations  
+- **Developer**: Adds new operations without modifying existing code
+
+**Use Cases:**
+- **Calculate Room Pricing**: Sets appropriate prices for different room types
+- **Perform Room Maintenance**: Handles cleaning and repair operations
+- **Add New Operations**: Extends functionality (future enhancement)
+
+**Room Types**: All operations can be applied to Single, Double, and Deluxe rooms uniformly through the Visitor pattern.
+
+*Refer to the Use Case Diagram artifact above for the visual representation with actors, use cases, and their relationships.*
 
 ## Object Interaction Flow
 
-```
-                         CLIENT LAYER
-                    ┌─────────────────────┐
-                    │      main.cpp       │
-                    │   (Client Code)     │
-                    └─────────┬───────────┘
-                              │
-                              │ creates & uses
-                              ▼
-        ┌─────────────────────────────────────────────────────┐
-        │                ELEMENT LAYER                        │
-        │                                                     │
-        │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐ │
-        │  │ SingleRoom  │  │ DoubleRoom  │  │ DeluxeRoom  │ │
+The object interaction flow diagram illustrates the three-layer architecture of the Visitor pattern implementation and shows how objects communicate with each other during execution.
+
+**Three-Layer Architecture:**
+1. **Client Layer**: Contains the main application logic (`main.cpp`)
+2. **Element Layer**: Contains room objects and the `RoomElement` interface
+3. **Visitor Layer**: Contains visitor objects and the `RoomVisitor` interface
+
+**Interaction Steps:**
+1. **Object Creation**: Client creates room and visitor instances
+2. **Method Invocation**: Client calls `room.accept(visitor)`
+3. **Double Dispatch**: Room calls `visitor.visit(this)`
+4. **Operation Execution**: Visitor performs the specific operation
+5. **Return Control**: Control flows back to the client
+
+**Key Relationships:**
+- **Implements**: Concrete classes implement their respective interfaces
+- **Creates & Uses**: Client creates and manages all objects
+- **Accept/Visit**: Rooms and visitors interact through double dispatch
+
+*Refer to the Object Interaction Flow artifact above for the detailed architectural view and interaction patterns.*│  │ DeluxeRoom  │ │
         │  │             │  │             │  │             │ │
         │  │ +roomPrice  │  │ +roomPrice  │  │ +roomPrice  │ │
         │  │ +accept()   │  │ +accept()   │  │ +accept()   │ │
