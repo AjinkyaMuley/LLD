@@ -43,226 +43,374 @@ VisitorDesignPattern/
 
 ## Class Diagram
 
-```mermaid
-classDiagram
-    class RoomElement {
-        <<abstract>>
-        +accept(RoomVisitor* visitor)*
-        +~RoomElement()
-    }
-    
-    class SingleRoom {
-        +int roomPrice
-        +accept(RoomVisitor* visitor)
-    }
-    
-    class DoubleRoom {
-        +int roomPrice
-        +accept(RoomVisitor* visitor)
-    }
-    
-    class DeluxeRoom {
-        +int roomPrice
-        +accept(RoomVisitor* visitor)
-    }
-    
-    class RoomVisitor {
-        <<abstract>>
-        +visit(SingleRoom* room)*
-        +visit(DoubleRoom* room)*
-        +visit(DeluxeRoom* room)*
-        +~RoomVisitor()
-    }
-    
-    class RoomPricingVisitor {
-        +visit(SingleRoom* room)
-        +visit(DoubleRoom* room)
-        +visit(DeluxeRoom* room)
-    }
-    
-    class RoomMaintenanceVisitor {
-        +visit(SingleRoom* room)
-        +visit(DoubleRoom* room)
-        +visit(DeluxeRoom* room)
-    }
-    
-    RoomElement <|-- SingleRoom
-    RoomElement <|-- DoubleRoom
-    RoomElement <|-- DeluxeRoom
-    
-    RoomVisitor <|-- RoomPricingVisitor
-    RoomVisitor <|-- RoomMaintenanceVisitor
-    
-    RoomElement ..> RoomVisitor : uses
-    RoomVisitor ..> SingleRoom : visits
-    RoomVisitor ..> DoubleRoom : visits
-    RoomVisitor ..> DeluxeRoom : visits
+```
+┌─────────────────────────────┐
+│       RoomElement           │
+│       <<abstract>>          │
+├─────────────────────────────┤
+│ + accept(RoomVisitor*) = 0  │
+│ + ~RoomElement()            │
+└─────────────┬───────────────┘
+              │
+              │ inherits
+    ┌─────────┼─────────┐
+    │         │         │
+    ▼         ▼         ▼
+┌─────────┐ ┌─────────┐ ┌─────────┐
+│SingleRoom│ │DoubleRoom│ │DeluxeRoom│
+├─────────┤ ├─────────┤ ├─────────┤
+│+roomPrice│ │+roomPrice│ │+roomPrice│
+│+accept() │ │+accept() │ │+accept() │
+└─────────┘ └─────────┘ └─────────┘
+     │           │           │
+     │           │           │
+     └───────────┼───────────┘
+                 │ uses
+                 ▼
+    ┌─────────────────────────────┐
+    │       RoomVisitor           │
+    │       <<abstract>>          │
+    ├─────────────────────────────┤
+    │ + visit(SingleRoom*) = 0    │
+    │ + visit(DoubleRoom*) = 0    │
+    │ + visit(DeluxeRoom*) = 0    │
+    │ + ~RoomVisitor()            │
+    └─────────────┬───────────────┘
+                  │
+                  │ inherits
+        ┌─────────┴─────────┐
+        │                   │
+        ▼                   ▼
+┌─────────────────┐ ┌─────────────────────┐
+│RoomPricingVisitor│ │RoomMaintenanceVisitor│
+├─────────────────┤ ├─────────────────────┤
+│+visit(SingleRoom)│ │+visit(SingleRoom)   │
+│+visit(DoubleRoom)│ │+visit(DoubleRoom)   │
+│+visit(DeluxeRoom)│ │+visit(DeluxeRoom)   │
+└─────────────────┘ └─────────────────────┘
 ```
 
 ## Sequence Diagram
 
-```mermaid
-sequenceDiagram
-    participant Client as main()
-    participant SR as SingleRoom
-    participant DR as DoubleRoom
-    participant DLR as DeluxeRoom
-    participant PV as PricingVisitor
-    participant MV as MaintenanceVisitor
-    
-    Client->>+SR: create SingleRoom
-    Client->>+DR: create DoubleRoom
-    Client->>+DLR: create DeluxeRoom
-    Client->>+PV: create PricingVisitor
-    
-    Note over Client,PV: Pricing Phase
-    Client->>SR: accept(pricingVisitor)
-    SR->>PV: visit(this)
-    PV->>SR: set roomPrice = 1000
-    PV-->>SR: return
-    SR-->>Client: return
-    
-    Client->>DR: accept(pricingVisitor)
-    DR->>PV: visit(this)
-    PV->>DR: set roomPrice = 2000
-    PV-->>DR: return
-    DR-->>Client: return
-    
-    Client->>DLR: accept(pricingVisitor)
-    DLR->>PV: visit(this)
-    PV->>DLR: set roomPrice = 5000
-    PV-->>DLR: return
-    DLR-->>Client: return
-    
-    Client->>+MV: create MaintenanceVisitor
-    
-    Note over Client,MV: Maintenance Phase
-    Client->>SR: accept(maintenanceVisitor)
-    SR->>MV: visit(this)
-    MV->>MV: perform maintenance
-    MV-->>SR: return
-    SR-->>Client: return
-    
-    Client->>DR: accept(maintenanceVisitor)
-    DR->>MV: visit(this)
-    MV->>MV: perform maintenance
-    MV-->>DR: return
-    DR-->>Client: return
-    
-    Client->>DLR: accept(maintenanceVisitor)
-    DLR->>MV: visit(this)
-    MV->>MV: perform maintenance
-    MV-->>DLR: return
-    DLR-->>Client: return
+```
+Client    SingleRoom   DoubleRoom   DeluxeRoom   PricingVisitor   MaintenanceVisitor
+  |           |            |            |              |                |
+  |--create-->|            |            |              |                |
+  |--create------------->|            |              |                |
+  |--create------------------------->|              |                |
+  |--create---------------------------------------------->|                |
+  |           |            |            |              |                |
+  |           |            |            |              |                |
+  |-- PRICING PHASE ---------------------------------->|                |
+  |           |            |            |              |                |
+  |--accept-->|            |            |              |                |
+  |           |--visit(this)--------------------------->|                |
+  |           |            |            |      set roomPrice=1000       |
+  |           |<-return---------------------------------|                |
+  |<-return---|            |            |              |                |
+  |           |            |            |              |                |
+  |--accept-------------->|            |              |                |
+  |           |            |--visit(this)------------->|                |
+  |           |            |            |      set roomPrice=2000       |
+  |           |            |<-return----|              |                |
+  |<-return----------------|            |              |                |
+  |           |            |            |              |                |
+  |--accept--------------------------->|              |                |
+  |           |            |            |--visit(this)->|                |
+  |           |            |            |      set roomPrice=5000       |
+  |           |            |            |<-return------|                |
+  |<-return-----------------------------|              |                |
+  |           |            |            |              |                |
+  |--create----------------------------------------------------------->|
+  |           |            |            |              |                |
+  |-- MAINTENANCE PHASE --------------------------------|--------------->|
+  |           |            |            |              |                |
+  |--accept-->|            |            |              |                |
+  |           |--visit(this)---------------------------------------------->|
+  |           |            |            |              |    perform maintenance
+  |           |<-return----------------------------------------------|
+  |<-return---|            |            |              |                |
+  |           |            |            |              |                |
+  |--accept-------------->|            |              |                |
+  |           |            |--visit(this)------------------------------>|
+  |           |            |            |              |    perform maintenance
+  |           |            |<-return------------------------------------|
+  |<-return----------------|            |              |                |
+  |           |            |            |              |                |
+  |--accept--------------------------->|              |                |
+  |           |            |            |--visit(this)----------------->|
+  |           |            |            |              |    perform maintenance
+  |           |            |            |<-return-----------------------|
+  |<-return-----------------------------|              |                |
 ```
 
 ## Activity Diagram
 
-```mermaid
-flowchart TD
-    A[Start] --> B[Create Room Objects]
-    B --> C[Create Pricing Visitor]
-    C --> D[Apply Pricing to Single Room]
-    D --> E[Apply Pricing to Double Room]
-    E --> F[Apply Pricing to Deluxe Room]
-    F --> G[Display Room Prices]
-    G --> H[Create Maintenance Visitor]
-    H --> I[Apply Maintenance to Single Room]
-    I --> J[Apply Maintenance to Double Room]
-    J --> K[Apply Maintenance to Deluxe Room]
-    K --> L[End]
-    
-    subgraph "Visitor Pattern Flow"
-        M[Room.accept(visitor)] --> N[visitor.visit(room)]
-        N --> O[Execute Operation]
-        O --> P[Return to Client]
-    end
+```
+                           [Start]
+                              |
+                              ▼
+                    ┌─────────────────────┐
+                    │   Create Room       │
+                    │   Objects           │
+                    │ (Single, Double,    │
+                    │  Deluxe)            │
+                    └──────────┬──────────┘
+                              |
+                              ▼
+                    ┌─────────────────────┐
+                    │  Create Pricing     │
+                    │  Visitor Object     │
+                    └──────────┬──────────┘
+                              |
+                              ▼
+        ┌─────────────────────────────────────────────────┐
+        │         PRICING OPERATIONS                      │
+        │                                                 │
+        │  ┌─────────────────────┐                       │
+        │  │ Apply Pricing to    │                       │
+        │  │ Single Room         │                       │
+        │  │ (set price = 1000)  │                       │
+        │  └─────────┬───────────┘                       │
+        │            │                                   │
+        │            ▼                                   │
+        │  ┌─────────────────────┐                       │
+        │  │ Apply Pricing to    │                       │
+        │  │ Double Room         │                       │
+        │  │ (set price = 2000)  │                       │
+        │  └─────────┬───────────┘                       │
+        │            │                                   │
+        │            ▼                                   │
+        │  ┌─────────────────────┐                       │
+        │  │ Apply Pricing to    │                       │
+        │  │ Deluxe Room         │                       │
+        │  │ (set price = 5000)  │                       │
+        │  └─────────┬───────────┘                       │
+        └────────────┼───────────────────────────────────┘
+                     │
+                     ▼
+                    ┌─────────────────────┐
+                    │  Display Room       │
+                    │  Prices             │
+                    └──────────┬──────────┘
+                              |
+                              ▼
+                    ┌─────────────────────┐
+                    │  Create Maintenance │
+                    │  Visitor Object     │
+                    └──────────┬──────────┘
+                              |
+                              ▼
+        ┌─────────────────────────────────────────────────┐
+        │       MAINTENANCE OPERATIONS                    │
+        │                                                 │
+        │  ┌─────────────────────┐                       │
+        │  │ Perform Maintenance │                       │
+        │  │ on Single Room      │                       │
+        │  └─────────┬───────────┘                       │
+        │            │                                   │
+        │            ▼                                   │
+        │  ┌─────────────────────┐                       │
+        │  │ Perform Maintenance │                       │
+        │  │ on Double Room      │                       │
+        │  └─────────┬───────────┘                       │
+        │            │                                   │
+        │            ▼                                   │
+        │  ┌─────────────────────┐                       │
+        │  │ Perform Maintenance │                       │
+        │  │ on Deluxe Room      │                       │
+        │  └─────────┬───────────┘                       │
+        └────────────┼───────────────────────────────────┘
+                     │
+                     ▼
+                   [End]
+
+              Visitor Pattern Flow:
+        ┌─────────────────────────────────┐
+        │     room.accept(visitor)        │
+        └──────────────┬──────────────────┘
+                       │
+                       ▼
+        ┌─────────────────────────────────┐
+        │     visitor.visit(room)         │
+        └──────────────┬──────────────────┘
+                       │
+                       ▼
+        ┌─────────────────────────────────┐
+        │    Execute Operation            │
+        │   (pricing/maintenance)         │
+        └──────────────┬──────────────────┘
+                       │
+                       ▼
+        ┌─────────────────────────────────┐
+        │     Return to Client            │
+        └─────────────────────────────────┘
 ```
 
 ## Use Case Diagram
 
-```mermaid
-flowchart LR
-    subgraph "Hotel Management System"
-        UC1[Calculate Room Pricing]
-        UC2[Perform Room Maintenance]
-        UC3[Add New Operations]
-    end
-    
-    subgraph "Actors"
-        HM[Hotel Manager]
-        MS[Maintenance Staff]
-        Dev[Developer]
-    end
-    
-    subgraph "Room Types"
-        SR[Single Room]
-        DR[Double Room]
-        DLR[Deluxe Room]
-    end
-    
-    HM --> UC1
-    MS --> UC2
-    Dev --> UC3
-    
-    UC1 --> SR
-    UC1 --> DR
-    UC1 --> DLR
-    
-    UC2 --> SR
-    UC2 --> DR
-    UC2 --> DLR
+```
+                    Hotel Management System
+    ┌─────────────────────────────────────────────────────────┐
+    │                                                         │
+    │         ┌─────────────────────────┐                     │
+    │         │   Calculate Room        │                     │
+    │         │   Pricing               │                     │
+    │         └───────────┬─────────────┘                     │
+    │                     │                                   │
+    │         ┌─────────────────────────┐                     │
+    │         │   Perform Room          │                     │
+    │         │   Maintenance           │                     │
+    │         └───────────┬─────────────┘                     │
+    │                     │                                   │
+    │         ┌─────────────────────────┐                     │
+    │         │   Add New Operations    │                     │
+    │         │   (Future Extension)    │                     │
+    │         └───────────┬─────────────┘                     │
+    │                     │                                   │
+    └─────────────────────┼───────────────────────────────────┘
+                          │
+         ┌────────────────┼────────────────┐
+         │                │                │
+         ▼                ▼                ▼
+    ┌─────────┐    ┌─────────────┐    ┌──────────┐
+    │ Hotel   │    │Maintenance  │    │Developer │
+    │ Manager │    │   Staff     │    │          │
+    └─────────┘    └─────────────┘    └──────────┘
+         │                │                │
+         │                │                │
+         └────────────────┼────────────────┘
+                          │
+                          ▼
+              ┌───────────────────────┐
+              │     Room Types        │
+              │                       │
+              │  ┌─────────────────┐  │
+              │  │  Single Room    │  │
+              │  │  - roomPrice    │  │
+              │  │  - accept()     │  │
+              │  └─────────────────┘  │
+              │                       │
+              │  ┌─────────────────┐  │
+              │  │  Double Room    │  │
+              │  │  - roomPrice    │  │
+              │  │  - accept()     │  │
+              │  └─────────────────┘  │
+              │                       │
+              │  ┌─────────────────┐  │
+              │  │  Deluxe Room    │  │
+              │  │  - roomPrice    │  │
+              │  │  - accept()     │  │
+              │  └─────────────────┘  │
+              └───────────────────────┘
+
+    Relationships:
+    ┌─────────────────────────────────────────────────────┐
+    │ Hotel Manager    → Calculate Room Pricing           │
+    │ Maintenance Staff → Perform Room Maintenance       │
+    │ Developer        → Add New Operations               │
+    │                                                     │
+    │ All Use Cases   → Apply to All Room Types          │
+    └─────────────────────────────────────────────────────┘
 ```
 
 ## Object Interaction Flow
 
-```mermaid
-graph TD
-    subgraph "Client Layer"
-        Client[main.cpp]
-    end
+```
+                         CLIENT LAYER
+                    ┌─────────────────────┐
+                    │      main.cpp       │
+                    │   (Client Code)     │
+                    └─────────┬───────────┘
+                              │
+                              │ creates & uses
+                              ▼
+        ┌─────────────────────────────────────────────────────┐
+        │                ELEMENT LAYER                        │
+        │                                                     │
+        │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐ │
+        │  │ SingleRoom  │  │ DoubleRoom  │  │ DeluxeRoom  │ │
+        │  │             │  │             │  │             │ │
+        │  │ +roomPrice  │  │ +roomPrice  │  │ +roomPrice  │ │
+        │  │ +accept()   │  │ +accept()   │  │ +accept()   │ │
+        │  └─────────────┘  └─────────────┘  └─────────────┘ │
+        │         │               │               │           │
+        │         └───────────────┼───────────────┘           │
+        │                         │                           │
+        │              implements │                           │
+        │                         ▼                           │
+        │               ┌─────────────────┐                   │
+        │               │  RoomElement    │                   │
+        │               │  (Interface)    │                   │
+        │               │                 │                   │
+        │               │ +accept()=0     │                   │
+        │               └─────────────────┘                   │
+        └─────────────────────┬───────────────────────────────┘
+                              │
+                              │ interacts with
+                              ▼
+        ┌─────────────────────────────────────────────────────┐
+        │                 VISITOR LAYER                       │
+        │                                                     │
+        │ ┌──────────────────┐    ┌─────────────────────────┐ │
+        │ │ PricingVisitor   │    │ MaintenanceVisitor      │ │
+        │ │                  │    │                         │ │
+        │ │ +visit(Single)   │    │ +visit(Single)          │ │
+        │ │ +visit(Double)   │    │ +visit(Double)          │ │
+        │ │ +visit(Deluxe)   │    │ +visit(Deluxe)          │ │
+        │ └──────────────────┘    └─────────────────────────┘ │
+        │          │                         │                │
+        │          └─────────────┬───────────┘                │
+        │                        │                            │
+        │             implements │                            │
+        │                        ▼                            │
+        │               ┌─────────────────┐                   │
+        │               │  RoomVisitor    │                   │
+        │               │  (Interface)    │                   │
+        │               │                 │                   │
+        │               │ +visit()=0      │                   │
+        │               └─────────────────┘                   │
+        └─────────────────────────────────────────────────────┘
+
+                    INTERACTION FLOW DIAGRAM:
+
+    Step 1: Object Creation
+    Client ──creates──> Room Objects
+    Client ──creates──> Visitor Objects
+
+    Step 2: Method Invocation  
+    Client ──calls──> room.accept(visitor)
+
+    Step 3: Double Dispatch
+    Room   ──calls──> visitor.visit(this)
+
+    Step 4: Operation Execution
+    Visitor ──performs──> Specific Operation
     
-    subgraph "Element Layer"
-        SR[SingleRoom]
-        DR[DoubleRoom]
-        DLR[DeluxeRoom]
-        RE[RoomElement Interface]
-    end
-    
-    subgraph "Visitor Layer"
-        PV[PricingVisitor]
-        MV[MaintenanceVisitor]
-        RV[RoomVisitor Interface]
-    end
-    
-    Client --> SR
-    Client --> DR
-    Client --> DLR
-    Client --> PV
-    Client --> MV
-    
-    SR --> RE
-    DR --> RE
-    DLR --> RE
-    
-    PV --> RV
-    MV --> RV
-    
-    SR -.->|accept()| PV
-    DR -.->|accept()| PV
-    DLR -.->|accept()| PV
-    
-    SR -.->|accept()| MV
-    DR -.->|accept()| MV
-    DLR -.->|accept()| MV
-    
-    PV -.->|visit()| SR
-    PV -.->|visit()| DR
-    PV -.->|visit()| DLR
-    
-    MV -.->|visit()| SR
-    MV -.->|visit()| DR
-    MV -.->|visit()| DLR
+    Step 5: Return Control
+    Visitor ──returns──> to Room
+    Room    ──returns──> to Client
+
+                    DETAILED CALL FLOW:
+
+    ┌─────────────┐    accept(pricingVisitor)    ┌─────────────┐
+    │ Client      │ ──────────────────────────> │ SingleRoom  │
+    │ main()      │                             │             │
+    └─────────────┘                             └─────────────┘
+                                                       │
+                                                       │ visit(this)
+                                                       ▼
+                                               ┌─────────────────┐
+                                               │ PricingVisitor  │
+                                               │                 │
+                                               │ Sets roomPrice  │
+                                               │ = 1000          │
+                                               └─────────────────┘
+
+    The same pattern repeats for:
+    - DoubleRoom (price = 2000)  
+    - DeluxeRoom (price = 5000)
+    - MaintenanceVisitor operations
 ```
 
 ## Benefits and Trade-offs
